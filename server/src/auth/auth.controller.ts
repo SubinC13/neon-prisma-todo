@@ -2,6 +2,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Res,
   Req,
@@ -139,5 +140,16 @@ export class AuthController {
     res.clearCookie('refresh_token', { path: '/auth/refresh' });
     res.clearCookie('csrf_token', { path: '/' });
     return { ok: true };
+  }
+
+  @Get('profile')
+  async getProfile(@Req() req: express.Request) {
+    const token = req.cookies?.access_token;
+    if (!token) throw new UnauthorizedException();
+    
+    const jwt = require('jsonwebtoken');
+    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await this.authService.getUserById(payload.sub);
+    return { user };
   }
 }

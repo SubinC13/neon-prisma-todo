@@ -5,11 +5,22 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from 'src/prisma.services';
 import { v4 as uuidv4 } from 'uuid';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
-  revokeTokenById(id: any) {
-    throw new Error('Method not implemented.');
+  async revokeTokenById(id: any) {
+    await this.prisma.refreshToken.update({
+      where: { id },
+      data: { revoked: true },
+    });
+  }
+
+  async getUserById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, createdAt: true },
+    });
   }
   constructor(private prisma: PrismaService) {}
 
@@ -41,10 +52,19 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
+    console.log('Login attempt for email:', email);
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new UnauthorizedException();
+    console.log('User found:', !!user);
+    if (!user) {
+      console.log('User not found');
+      throw new UnauthorizedException();
+    }
     const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) throw new UnauthorizedException();
+    console.log('Password match:', ok);
+    if (!ok) {
+      console.log('Password mismatch');
+      throw new UnauthorizedException();
+    }
     const accessToken = await this.signAccessToken(user.id);
     const refreshToken = await this.createRefreshToken(user.id);
     return { accessToken, refreshToken, user };
