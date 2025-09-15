@@ -6,7 +6,7 @@ A full-stack Todo application built with Next.js (frontend), Node.js/Express (ba
 
 ## Features
 
-- User authentication (JWT-based)
+- User authentication (JWT-based).
 - Create, update, delete, and list todos
 - Responsive UI with Next.js
 - PostgreSQL database with Prisma ORM
